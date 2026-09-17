@@ -56,9 +56,9 @@ The current prototype does not include ERP/CRM integration or automatic email se
 
 ## Repository Contents
 
-- `workflow/` – exported n8n workflow
-- `images/` – workflow architecture
-- `docs/` – project documentation and test results
+- `volta_coffee_n8n_workflow.json` – exported n8n workflow
+- `Validation_Log_Volta_Coffee.pdf` – validation log with test execution screenshots
+- `Test_Plan_und_Ergebnisse.pdf` – test plan and results
+- Additional PDF files – project documentation, design decisions, and limitations
 
 > **Note:** External service credentials and API keys are not included and must be configured separately in n8n.
-

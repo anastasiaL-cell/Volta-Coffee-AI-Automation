@@ -62,3 +62,6 @@ The current prototype does not include ERP/CRM integration or automatic email se
 - Additional PDF files – project documentation, design decisions, and limitations
 
 > **Note:** External service credentials and API keys are not included and must be configured separately in n8n.
+
+> **Note:** The workflow and supporting PDF documentation were originally created in German as part of the project work. This README provides an English overview of the project. External service credentials and API keys are not included and must be configured separately in n8n.
+

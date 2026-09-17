@@ -1,0 +1,540 @@
+{
+  "name": "Volta Coffee – Wholesale Order Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "volta-wholesale-order",
+        "options": {}
+      },
+      "id": "ca4e3799-5b09-4901-bdf8-ae271c95c04f",
+      "name": "Bestellung empfangen",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        112
+      ],
+      "webhookId": "a4709bdb-bac7-4a39-b063-040a382ff7a5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d18b4099-5820-45cb-8a13-42600767e654",
+              "name": "customer_name",
+              "value": "={{ $json.body.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "0b7b75e9-6e16-4a46-8a7a-57e1bdaa3ec0",
+              "name": "customer_email",
+              "value": "={{ $json.body.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "a1441b26-850d-47bd-8129-0105240ed25a",
+              "name": "order_text",
+              "value": "={{ $json.body.order_text }}",
+              "type": "string"
+            },
+            {
+              "id": "5cce43ef-1d5a-4229-8f7e-cd6c93d076d0",
+              "name": "received_at",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "20d2742a-086f-4b24-aff3-0bf7eba1b0dc",
+      "name": "Eingaben vereinheitlichen",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -240,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Kundenname: {{ $json.customer_name }}\nKunden-E-Mail: {{ $json.customer_email }}\n\nBestelltext:\n{{ $json.order_text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# Rolle\n\nDu bist der AI Agent für Volta Coffee Roasters.\n\nDu unterstützt die Betriebsleiterin Inês Marques bei der Bearbeitung eingehender Großhandelsbestellungen.\n\nDeine Aufgabe besteht darin, Bestellungen zu analysieren, strukturierte Informationen zu extrahieren und eine Empfehlung für die weitere Bearbeitung zu geben.\n\nTreffe keine Geschäftsentscheidungen selbst. Deine Aufgabe besteht ausschließlich darin, Informationen aufzubereiten und die Bestellung zu klassifizieren.\n\n\n# Eingabe\n\nDer Input besteht aus:\n\n- customer_name\n- customer_email\n- order_text\n\n\n# Aufgabe\n\nAnalysiere den Bestelltext und extrahiere alle relevanten Informationen.\n\nGib ausschließlich gültiges JSON mit folgenden Feldern zurück:\n\n{\n  \"customer_name\": \"...\",\n  \"customer_email\": \"...\",\n  \"products\": [\n    {\n      \"product_name\": \"...\",\n      \"quantity\": number,\n      \"unit\": \"kg\"\n    }\n  ],\n  \"notes\": \"...\",\n  \"classification\": \"...\",\n  \"confidence\": number\n}\n\n\n# Regeln\n\nExtrahiere alle genannten Produkte.\n\nExtrahiere alle Mengen.\n\nWenn keine Einheit angegeben ist, verwende null.\n\nNotiere Lieferhinweise oder Sonderwünsche im Feld \"notes\".\n\nDie Klassifizierung muss genau einen der folgenden Werte enthalten:\n\n- standard\n- needs_review\n- needs_clarification\n\nVerwende \"standard\", wenn:\n- mindestens ein Produkt erkannt wurde,\n- für jedes erkannte Produkt eine Menge vorhanden ist,\n- die Bestellung insgesamt eindeutig verständlich ist.\n\nVerwende \"needs_review\", wenn:\n- ungewöhnlich große Mengen bestellt werden,\n- Expresslieferung oder Sonderrabatte gewünscht werden,\n- Alternativen vorgeschlagen werden sollen,\n- die Bestellung zwar verständlich ist, aber von einem Mitarbeiter geprüft werden sollte.\n\nVerwende \"needs_clarification\" nur, wenn die Bestellung nicht sinnvoll bearbeitet werden kann, weil wesentliche Informationen fehlen, z. B.:\n- kein Produkt erkennbar,\n- keine Menge für alle Produkte vorhanden,\n- der Bestellwunsch unverständlich oder mehrdeutig ist.\n\nNutze \"needs_clarification\" nur als letzte Möglichkeit.\n\nconfidence ist ein Wert zwischen 0 und 1.\n\nGib ausschließlich gültiges JSON zurück.\n\nFüge keine Erklärungen hinzu.\n\nVerwende kein Markdown."
+        }
+      },
+      "id": "dfa2185b-d8e8-488a-8f29-e647038cd682",
+      "name": "Bestellung analysieren",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -16,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "id": "66e61425-0684-425a-ab8b-7ffa0479b38c",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        336
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "TF2GC6PNI6R9C4V4",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.classification.trim().toLowerCase() }}",
+                    "rightValue": "standard",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e967f0ef-6374-4833-a4fd-ae54531d54fc"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "standard"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a1658906-823e-49cf-80cf-5630b3d0c1b7",
+                    "leftValue": "={{ $json.output.classification }}",
+                    "rightValue": "needs_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "needs_review"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "35078a02-a829-4f29-88a7-37edc444823a",
+                    "leftValue": "={{ $json.output.classification }}",
+                    "rightValue": "needs_clarification",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "needs_clarification"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0c06c76f-a685-42db-95d8-30a916b0e1be",
+      "name": "Bestellung klassifizieren",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appq7YJnI6phQM6WA",
+          "mode": "list",
+          "cachedResultName": "Volta Coffee – Wholesale Orders",
+          "cachedResultUrl": "https://airtable.com/appq7YJnI6phQM6WA"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblUXWHTiJAykyEdm",
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://airtable.com/appq7YJnI6phQM6WA/tblUXWHTiJAykyEdm"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "confidence": "={{ $('Bestellung analysieren').item.json.output.confidence }}",
+            "customer_email": "={{ $('Bestellung analysieren').item.json.output.customer_email }}",
+            "products": "={{ $('Bestellung analysieren').item.json.output.products\n  .map(p => `${p.quantity} ${p.unit} ${p.product_name}`)\n  .join(', ') }}",
+            "notes": "={{ $('Bestellung analysieren').item.json.output.notes }}",
+            "classification": "={{ $('Bestellung analysieren').item.json.output.classification.trim().toLowerCase() }}",
+            "received_at": "={{ $('Eingaben vereinheitlichen').item.json.received_at }}",
+            "customer_name": "={{ $('Bestellung analysieren').item.json.output.customer_name }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_email",
+              "displayName": "customer_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "products",
+              "displayName": "products",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "classification",
+              "displayName": "classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "standard",
+                  "value": "standard"
+                },
+                {
+                  "name": "needs_review",
+                  "value": "needs_review"
+                },
+                {
+                  "name": "needs_clarification",
+                  "value": "needs_clarification"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "id": "d34c295e-3093-426a-9949-40e1d929e5ab",
+      "name": "Bestellung in Airtable speichern",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        -64
+      ],
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "YIT1ckFgXRGobmRg",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ \"Bestellbestätigung - \" + $('Bestellung analysieren').item.json.output.customer_name }}",
+        "message": "={{\n`Guten Tag ${$('Bestellung analysieren').item.json.output.customer_name},\n\nvielen Dank für Ihre Bestellung bei Volta Coffee.\n\nWir haben folgende Bestellung erhalten:\n\n${$('Bestellung analysieren').item.json.output.products.map(p => `- ${p.quantity} ${p.unit} ${p.product_name}`).join('\\n')}\n\nAnmerkungen:\n${$('Bestellung analysieren').item.json.output.notes}\n\nIhre Bestellung wurde erfolgreich erfasst.\n\nUnser Vertriebsteam prüft Ihre Bestellung und meldet sich bei Rückfragen oder zur Terminbestätigung.\n\nMit freundlichen Grüßen\n\nVolta Coffee Wholesale Team`\n}}",
+        "options": {
+          "sendTo": "={{ $('Bestellung analysieren').item.json.output.customer_email }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        -64
+      ],
+      "id": "ecdba93b-0702-442b-84a4-ee660d8993f7",
+      "name": "Bestätigungsentwurf erstellen",
+      "webhookId": "c98c63ae-9751-4ed8-8862-1a71a6f196b7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "x2uUB1YzcvMZ0WLF",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BL9HC22JX",
+          "mode": "list",
+          "cachedResultName": "wholesale-review"
+        },
+        "text": "=⚠️ Bestellung benötigt Prüfung\n\nKunde:\n{{ $('Bestellung analysieren').item.json.output.customer_name }}\n\nE-Mail:\n{{ $('Bestellung analysieren').item.json.output.customer_email }}\n\nProdukte:\n{{ $('Bestellung analysieren').item.json.output.products.map(p => `${p.quantity} ${p.unit} ${p.product_name}`).join('\\n') }}\n\nAnmerkungen:\n{{ $('Bestellung analysieren').item.json.output.notes }}\n\nKlassifizierung:\n{{ $('Bestellung analysieren').item.json.output.classification }}\n\nKonfidenz:\n{{ $('Bestellung analysieren').item.json.output.confidence }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        576,
+        128
+      ],
+      "id": "354b8ac4-b0d5-4be1-b9f5-deb2914e8128",
+      "name": "Prüfungsanfrage an Slack senden",
+      "webhookId": "db1eef80-588e-4f88-860e-6c7443561b56",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "9o1YauUJhlvOBL9C",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BL9HC22JX",
+          "mode": "list",
+          "cachedResultName": "wholesale-review"
+        },
+        "text": "=❓ Rückfrage zur Bestellung erforderlich\n\nDie KI konnte die Bestellung nicht eindeutig verarbeiten, da wichtige Informationen fehlen oder unklar sind.\n\nBitte überprüfen Sie die Bestellung und kontaktieren Sie den Kunden, falls weitere Informationen benötigt werden.\n\n──────────────────────────────\n\nKunde:\n{{ $('Bestellung analysieren').item.json.output.customer_name }}\n\nE-Mail:\n{{ $('Bestellung analysieren').item.json.output.customer_email }}\n\nProdukte:\n{{ $('Bestellung analysieren').item.json.output.products\n.map(p => `${p.quantity} ${p.unit} ${p.product_name}`)\n.join('\\n') }}\n\nAnmerkungen:\n{{ $('Bestellung analysieren').item.json.output.notes }}\n\nKlassifizierung:\n{{ $('Bestellung analysieren').item.json.output.classification }}\n\nKonfidenz:\n{{ $('Bestellung analysieren').item.json.output.confidence }}\n\n──────────────────────────────\n\nEmpfohlene nächste Schritte:\n\n• Fehlende Produkt- oder Mengenangaben prüfen.\n• Kunden kontaktieren und fehlende Informationen anfordern.\n• Bestellung nach der Klärung erneut in den Workflow eingeben.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        576,
+        336
+      ],
+      "id": "5e559b56-0ac7-44c8-9ccd-aa260975608c",
+      "name": "Rückfrage an Slack senden",
+      "webhookId": "7971fc33-3794-44e0-9416-d9699cf336f2",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "9o1YauUJhlvOBL9C",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"customer_name\": \"Café Aurora\",\n  \"customer_email\": \"orders@cafe-aurora.pt\",\n  \"products\": [\n    {\n      \"product_name\": \"Brazil Fazenda\",\n      \"quantity\": 10,\n      \"unit\": \"kg\"\n    },\n    {\n      \"product_name\": \"Ethiopia Natural\",\n      \"quantity\": 5,\n      \"unit\": \"kg\"\n    }\n  ],\n  \"notes\": \"Lieferung möglichst nächste Woche.\",\n  \"classification\": \"standard\",\n  \"confidence\": 1\n}"
+      },
+      "id": "6e15bd99-7199-4f6a-a813-e541bd4f355b",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        352
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Bestellung empfangen": {
+      "main": [
+        [
+          {
+            "node": "Eingaben vereinheitlichen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingaben vereinheitlichen": {
+      "main": [
+        [
+          {
+            "node": "Bestellung analysieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bestellung analysieren": {
+      "main": [
+        [
+          {
+            "node": "Bestellung klassifizieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Bestellung analysieren",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bestellung klassifizieren": {
+      "main": [
+        [
+          {
+            "node": "Bestellung in Airtable speichern",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prüfungsanfrage an Slack senden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rückfrage an Slack senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bestellung in Airtable speichern": {
+      "main": [
+        [
+          {
+            "node": "Bestätigungsentwurf erstellen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Bestellung analysieren",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a65c34e0-a0f1-421a-82c4-215e0d3b1cb6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "05c63aeac0ea3effffa52af24d395ff544d1ead5be9a6e1c640f5087300f0aa4"
+  },
+  "nodeGroups": [],
+  "id": "fMVzM4rnQeuV3Kvn",
+  "tags": []
+}

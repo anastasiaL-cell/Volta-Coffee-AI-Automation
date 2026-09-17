@@ -48,7 +48,7 @@ The workflow was validated using three representative order scenarios:
 
 All three test cases were successfully classified and routed according to the defined business rules.
 
-📄 [View detailed test documentation with execution screenshots](docs/Validation_Log_Volta_Coffee.pdf)
+📄 [View detailed test documentation with execution screenshots](Validation_Log_Volta_Coffee.pdf)
 
 ## Limitations
 
